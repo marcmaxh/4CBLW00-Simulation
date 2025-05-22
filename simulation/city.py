@@ -2,10 +2,12 @@ import random
 from typing import List, Tuple
 from vehicle import FatBike, Car, Bus
 from trip import Trip
+from traffic_model import TrafficModel
 
 class City:
     def __init__(self, name: str = "Eindhoven", seed: int = None):
         self.name = name
+        self.traffic_model = TrafficModel()
         self.zones = ["Centrum", "Strijp-S", "TU/e", "Woensel", "Tongelre", "Gestel"]
 
         # Example static OD matrix (distances in km)
@@ -37,13 +39,13 @@ class City:
     def od_distance(self, origin: str, destination: str) -> float:
         return self.od_matrix.get((origin, destination), None)
 
-    def random_traffic_level(self, time_of_day: str) -> int:
-        return self.traffic_profile.get(time_of_day, 50)
+    def random_traffic_level(self, origin: str, destination: str, time_of_day: str) -> int:
+        return self.traffic_model.get_traffic_level(origin, destination, time_of_day)
 
     def generate_random_trip(self, time_of_day: str = "rush_hour") -> Trip:
         origin, destination = self.random_od_pair()
         distance = self.od_distance(origin, destination)
-        traffic = self.random_traffic_level(time_of_day)
+        traffic = self.random_traffic_level(origin, destination, time_of_day)
         vehicle = random.choice(self.vehicles)
 
         if vehicle.name == "Bus":
