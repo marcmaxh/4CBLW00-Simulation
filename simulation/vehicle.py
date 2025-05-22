@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from config import vehicle_config
+from config.vehicle_config import vehicle_config
 
 class Vehicle(ABC):
     def __init__(self, name:str, speed_kmh: float, emissions_per_km: float, production_emission_kg: float, capacity: int = 1):

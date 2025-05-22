@@ -1,5 +1,3 @@
-# trip.py
-
 from vehicle import Vehicle
 
 class Trip:
