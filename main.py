@@ -1,4 +1,4 @@
-from simulation.ui import launch_ui
+from simulation.ui import UI
 
 if __name__ == "__main__":
-    launch_ui()
+    ui = UI()

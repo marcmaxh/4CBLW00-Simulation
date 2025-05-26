@@ -1,4 +1,4 @@
-from vehicle import Vehicle
+from .vehicle import Vehicle
 
 class Trip:
     def __init__(self, vehicle: Vehicle, distance_km: float, traffic_level: int, passengers: int = 1):

@@ -1,8 +1,8 @@
 import random
 from typing import List, Tuple
-from vehicle import FatBike, Car, Bus
-from trip import Trip
-from traffic_model import TrafficModel
+from .vehicle import FatBike, Car, Bus
+from .trip import Trip
+from .traffic_model import TrafficModel
 
 class City:
     def __init__(self, name: str = "Eindhoven", seed: int = None):
