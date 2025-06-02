@@ -1,7 +1,7 @@
 import random
 from typing import List, Dict
-from .city import City
-from .vehicle import Car, Bus, FatBike
+from city import City
+from vehicle import Car, Bus, FatBike
 from utils import plotting
 
 
@@ -19,54 +19,56 @@ class Simulation:
     def run(self) -> List[Dict]:
         """
         Run the simulation for a number of random trips.
-        Returns a list of trip metrics per vehicle type.
+        Returns a list of detailed trip summaries.
         """
         results = []
-
         for _ in range(self.num_trips):
             trip = self.city.generate_random_trip(time_of_day=self.time_of_day)
-            trip_data = {
-                "origin": trip.origin,
-                "destination": trip.destination,
-                "distance_km": trip.distance_km,
-                "traffic_level": trip.traffic_level,
-                "results": {}
-            }
-
-            for name, vehicle in self.vehicles.items():
-                emissions = vehicle.get_emissions(trip.distance_km)
-                speed = vehicle.get_speed(trip.traffic_level)
-                time_hr = trip.distance_km / speed if speed > 0 else float("inf")
-
-                trip_data["results"][name] = {
-                    "emissions_g": round(emissions, 2),
-                    "speed_kmh": round(speed, 2),
-                    "time_hr": round(time_hr, 2)
-                }
-
-            results.append(trip_data)
-
+            results.append(trip.summary())
         return results
 
     def summarize_results(self, results: List[Dict]):
         """
-        Summarize average metrics across all trips per vehicle type.
+        Summarize average metrics across all trips per vehicle type and report weather, occupancy, and delays.
         """
-        summary = {name: {"total_emissions": 0, "total_time": 0, "count": 0}
-                   for name in self.vehicles.keys()}
+        from collections import Counter
+        vehicle_stats = {}
+        weather_counter = Counter()
+        total_passengers = 0
+        total_trips = len(results)
+        total_delay = 0
+        delay_threshold = 0.1  # hours, e.g., 6 minutes
+        delayed_trips = 0
 
         for trip in results:
-            for vehicle, data in trip["results"].items():
-                summary[vehicle]["total_emissions"] += data["emissions_g"]
-                summary[vehicle]["total_time"] += data["time_hr"]
-                summary[vehicle]["count"] += 1
+            v = trip['vehicle']
+            vehicle_stats.setdefault(v, {'emissions': 0, 'duration': 0, 'count': 0, 'passengers': 0})
+            vehicle_stats[v]['emissions'] += trip['emissions_total_g']
+            vehicle_stats[v]['duration'] += trip['duration_hr']
+            vehicle_stats[v]['count'] += 1
+            vehicle_stats[v]['passengers'] += trip['passengers']
+            weather_counter[trip['weather']] += 1
+            total_passengers += trip['passengers']
+            # Delay: if duration is more than expected for clear weather by threshold
+            expected_speed = self.vehicles[v].get_speed(trip['traffic_level'])
+            expected_time = trip['distance_km'] / expected_speed if expected_speed > 0 else float('inf')
+            delay = trip['duration_hr'] - expected_time
+            if delay > delay_threshold:
+                delayed_trips += 1
+                total_delay += delay
 
         print(f"\n--- Simulation Summary for {self.num_trips} trips ({self.time_of_day}) ---")
-        for vehicle, data in summary.items():
-            count = data["count"]
-            avg_emissions = data["total_emissions"] / count
-            avg_time = data["total_time"] / count
-            print(f"{vehicle:8s} | Avg Emissions: {avg_emissions:.2f} g | Avg Time: {avg_time:.2f} h")
+        for v, stats in vehicle_stats.items():
+            avg_emissions = stats['emissions'] / stats['count']
+            avg_time = stats['duration'] / stats['count']
+            avg_occupancy = stats['passengers'] / stats['count']
+            print(f"{v:8s} | Avg Emissions: {avg_emissions:.2f} g | Avg Time: {avg_time:.2f} h | Avg Occupancy: {avg_occupancy:.2f}")
+        print(f"\nWeather distribution: {dict(weather_counter)}")
+        print(f"Average passengers per trip: {total_passengers / total_trips:.2f}")
+        if delayed_trips > 0:
+            print(f"Delayed trips (>6min): {delayed_trips} ({100*delayed_trips/total_trips:.1f}%), Avg delay: {total_delay/delayed_trips*60:.1f} min")
+        else:
+            print("No significant delays detected.")
 
     def set_time_of_day(self, time_of_day: str):
         """
@@ -76,7 +78,7 @@ class Simulation:
 
 
 if __name__ == "__main__":
-    sim = Simulation(num_trips=100)
+    sim = Simulation(num_trips=10000)
     sim.set_time_of_day("rush_hour")
     results = sim.run()
     sim.summarize_results(results)

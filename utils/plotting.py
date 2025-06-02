@@ -1,54 +1,113 @@
 import matplotlib.pyplot as plt
 from typing import List, Dict
+from collections import Counter
+import numpy as np
 
-
-def summarize_for_plot(results: List[Dict]) -> Dict[str, Dict[str, float]]:
+def summarize_for_plot(results: List[Dict]) -> Dict:
     """
-    Summarizes emissions and time per vehicle type.
+    Summarizes emissions, time, occupancy, weather, and delays per vehicle type.
     """
     summary = {}
+    weather_counter = Counter()
+    duration_list = []
+    delay_threshold = 0.1  # hours (6 min)
+    delayed_trips = 0
+    total_delay = 0
     for trip in results:
-        for vehicle, data in trip["results"].items():
-            if vehicle not in summary:
-                summary[vehicle] = {
-                    "total_emissions": 0,
-                    "total_time": 0,
-                    "count": 0
-                }
-            summary[vehicle]["total_emissions"] += data["emissions_g"]
-            summary[vehicle]["total_time"] += data["time_hr"]
-            summary[vehicle]["count"] += 1
+        v = trip["vehicle"]
+        if v not in summary:
+            summary[v] = {
+                "total_emissions": 0,
+                "total_time": 0,
+                "total_passengers": 0,
+                "total_emissions_per_passenger": 0,
+                "count": 0
+            }
+        summary[v]["total_emissions"] += trip["emissions_total_g"]
+        summary[v]["total_time"] += trip["duration_hr"]
+        summary[v]["total_passengers"] += trip["passengers"]
+        summary[v]["total_emissions_per_passenger"] += trip["emissions_per_passenger_g"]
+        summary[v]["count"] += 1
+        weather_counter[trip["weather"]] += 1
+        duration_list.append(trip["duration_hr"])
+        # Delay: if duration is more than expected for clear weather by threshold
+        expected_time = trip["distance_km"] / trip["speed_kmh"] if trip["speed_kmh"] > 0 else float('inf')
+        delay = trip["duration_hr"] - expected_time
+        if delay > delay_threshold:
+            delayed_trips += 1
+            total_delay += delay
 
     # Compute averages
-    for vehicle in summary:
-        summary[vehicle]["avg_emissions"] = summary[vehicle]["total_emissions"] / summary[vehicle]["count"]
-        summary[vehicle]["avg_time"] = summary[vehicle]["total_time"] / summary[vehicle]["count"]
-
+    for v in summary:
+        summary[v]["avg_emissions"] = summary[v]["total_emissions"] / summary[v]["count"]
+        summary[v]["avg_time"] = summary[v]["total_time"] / summary[v]["count"]
+        summary[v]["avg_occupancy"] = summary[v]["total_passengers"] / summary[v]["count"]
+        summary[v]["avg_emissions_per_passenger"] = summary[v]["total_emissions_per_passenger"] / summary[v]["count"]
+    summary["weather_distribution"] = dict(weather_counter)
+    summary["duration_list"] = duration_list
+    summary["delayed_trips"] = delayed_trips
+    summary["total_trips"] = len(results)
+    summary["avg_delay_min"] = (total_delay / delayed_trips * 60) if delayed_trips > 0 else 0
     return summary
 
 
-def plot_summary(summary: Dict[str, Dict[str, float]]):
+def plot_summary(summary: Dict):
     """
-    Plots average emissions and average time per vehicle type.
+    Plots average emissions, time, occupancy, emissions per passenger, weather, and trip duration distribution.
     """
-    vehicles = list(summary.keys())
+    vehicles = [v for v in summary if v not in ["weather_distribution", "duration_list", "delayed_trips", "total_trips", "avg_delay_min"]]
     avg_emissions = [summary[v]["avg_emissions"] for v in vehicles]
     avg_time = [summary[v]["avg_time"] for v in vehicles]
+    avg_occupancy = [summary[v]["avg_occupancy"] for v in vehicles]
+    avg_emissions_per_passenger = [summary[v]["avg_emissions_per_passenger"] for v in vehicles]
+    weather_dist = summary["weather_distribution"]
+    duration_list = summary["duration_list"]
+    delayed_trips = summary["delayed_trips"]
+    total_trips = summary["total_trips"]
+    avg_delay_min = summary["avg_delay_min"]
 
-    fig, axs = plt.subplots(1, 2, figsize=(12, 5))
-    fig.suptitle("Simulation Results by Vehicle Type")
+    fig, axs = plt.subplots(2, 3, figsize=(18, 10))
+    fig.suptitle("Simulation Results: Detailed Analysis")
 
     # Plot 1: Emissions
-    axs[0].bar(vehicles, avg_emissions, color=["red", "blue", "green"])
-    axs[0].set_title("Average Emissions per Trip (g CO₂)")
-    axs[0].set_ylabel("Grams of CO₂")
-    axs[0].set_xlabel("Vehicle Type")
+    axs[0, 0].bar(vehicles, avg_emissions, color=["red", "blue", "green"])
+    axs[0, 0].set_title("Avg Emissions per Trip (g CO₂)")
+    axs[0, 0].set_ylabel("Grams of CO₂")
+    axs[0, 0].set_xlabel("Vehicle Type")
 
     # Plot 2: Time
-    axs[1].bar(vehicles, avg_time, color=["red", "blue", "green"])
-    axs[1].set_title("Average Time per Trip (hours)")
-    axs[1].set_ylabel("Time (hours)")
-    axs[1].set_xlabel("Vehicle Type")
+    axs[0, 1].bar(vehicles, avg_time, color=["red", "blue", "green"])
+    axs[0, 1].set_title("Avg Time per Trip (hours)")
+    axs[0, 1].set_ylabel("Time (hours)")
+    axs[0, 1].set_xlabel("Vehicle Type")
 
-    plt.tight_layout()
+    # Plot 3: Occupancy
+    axs[0, 2].bar(vehicles, avg_occupancy, color=["red", "blue", "green"])
+    axs[0, 2].set_title("Avg Occupancy per Trip")
+    axs[0, 2].set_ylabel("Passengers")
+    axs[0, 2].set_xlabel("Vehicle Type")
+
+    # Plot 4: Emissions per Passenger
+    axs[1, 0].bar(vehicles, avg_emissions_per_passenger, color=["red", "blue", "green"])
+    axs[1, 0].set_title("Avg Emissions per Passenger (g CO₂)")
+    axs[1, 0].set_ylabel("g CO₂ / Passenger")
+    axs[1, 0].set_xlabel("Vehicle Type")
+
+    # Plot 5: Weather distribution
+    axs[1, 1].bar(weather_dist.keys(), weather_dist.values(), color=["gold", "skyblue", "gray", "lightgreen"][:len(weather_dist)])
+    axs[1, 1].set_title("Weather Distribution")
+    axs[1, 1].set_ylabel("Number of Trips")
+    axs[1, 1].set_xlabel("Weather")
+
+    # Plot 6: Trip duration histogram
+    axs[1, 2].hist(duration_list, bins=20, color="purple", alpha=0.7)
+    axs[1, 2].set_title("Trip Duration Distribution")
+    axs[1, 2].set_xlabel("Duration (hours)")
+    axs[1, 2].set_ylabel("Number of Trips")
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.show()
+
+    # Print delay stats
+    print(f"Delayed trips (>6min): {delayed_trips} / {total_trips} ({100*delayed_trips/total_trips:.1f}%), Avg delay: {avg_delay_min:.1f} min")
+
