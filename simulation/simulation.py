@@ -1,7 +1,7 @@
 import random
 from typing import List, Dict
-from city import City
-from vehicle import Car, Bus, FatBike
+from .city import City
+from .vehicle import Car, Bus, FatBike
 from utils import plotting
 
 

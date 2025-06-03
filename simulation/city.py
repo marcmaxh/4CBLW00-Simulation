@@ -1,9 +1,9 @@
 import random
 import os
 from typing import List, Tuple
-from vehicle import FatBike, Car, Bus
-from trip import Trip
-from traffic_model import TrafficModel
+from .vehicle import FatBike, Car, Bus
+from .trip import Trip
+from .traffic_model import TrafficModel
 from utils import traffic_api
 
 class City:
