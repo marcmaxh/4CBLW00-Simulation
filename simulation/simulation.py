@@ -6,8 +6,8 @@ from utils import plotting
 
 
 class Simulation:
-    def __init__(self, city_name: str = "Eindhoven", num_trips: int = 100, seed: int = 42):
-        self.city = City(name=city_name, seed=seed)
+    def __init__(self, city_name: str = "Eindhoven", num_trips: int = 100, seed: int = 42, use_real_data: bool = True):
+        self.city = City(name=city_name, seed=seed, use_real_data=use_real_data)
         self.num_trips = num_trips
         self.time_of_day = "rush_hour"  # default; can be changed dynamically
         self.vehicles = {
@@ -78,7 +78,7 @@ class Simulation:
 
 
 if __name__ == "__main__":
-    sim = Simulation(num_trips=10000)
+    sim = Simulation(num_trips=10000, use_real_data=False)
     sim.set_time_of_day("rush_hour")
     results = sim.run()
     sim.summarize_results(results)
