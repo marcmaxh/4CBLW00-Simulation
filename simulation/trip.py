@@ -25,7 +25,7 @@ class Trip:
         return self.vehicle.emissions_per_km * self.distance_km * self.weather_emission_factor
 
     def get_total_emissions(self) -> float:
-        return self.get_operational_emissions() + self.vehicle.production_emission_kg
+        return self.get_operational_emissions() + self.vehicle.embodied_emissions
 
     def get_emissions_per_passenger(self) -> float:
         return self.get_total_emissions() / self.passengers

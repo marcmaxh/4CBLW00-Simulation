@@ -2,18 +2,18 @@ from abc import ABC, abstractmethod
 from config.vehicle_config import vehicle_config
 
 class Vehicle(ABC):
-    def __init__(self, name:str, speed_kmh: float, emissions_per_km: float, production_emission_kg: float, capacity: int = 1):
+    def __init__(self, name:str, speed_kmh: float, emissions_per_km: float, embodied_emissions: float, capacity: int = 1):
         self.name = name # Name of the vehicle
         self.speed_kmh = speed_kmh # Speed in km/h
         self.emissions_per_km = emissions_per_km # Average amount of C02 equivalent emissions per km (g*CO2/km)
-        self.production_emission_kg = production_emission_kg # Production emissions in kg
+        self.embodied_emissions = embodied_emissions # Production emissions in kg
         self.capacity = capacity # Number of passengers the vehicle can carry
 
     def get_emissions(self, distance_km: float) -> float:
         """
         Calculate the emissions for a given distance.
         """
-        return self.emissions_per_km * distance_km + self.production_emission_kg
+        return self.emissions_per_km * distance_km + self.embodied_emissions
 
     @abstractmethod
     def get_speed(self, traffic_level: str) -> float:
@@ -30,7 +30,7 @@ class FatBike(Vehicle):
             name=cfg["name"],
             speed_kmh=cfg["base_speed_kmh"],
             emissions_per_km=cfg["emissions_per_km"],
-            production_emission_kg=cfg["production_emission_kg"],
+            embodied_emissions=cfg["embodied_emissions"],
             capacity=cfg["capacity"]
         )
 
@@ -46,7 +46,7 @@ class FatBike(Vehicle):
 
 class Car(Vehicle):
     def __init__(self):
-        super().__init__(name="Car", speed_kmh=60, emissions_per_km=150, production_emission_kg= 5000, capacity=4)
+        super().__init__(name="Car", speed_kmh=60, emissions_per_km=150, embodied_emissions= 5000, capacity=4)
 
     def get_speed(self, traffic_level: int) -> float:
         """
@@ -60,7 +60,7 @@ class Car(Vehicle):
 
 class Bus(Vehicle):
     def __init__(self):
-        super().__init__(name="Bus", speed_kmh=40, emissions_per_km=90, production_emission_kg= 20000, capacity=50)
+        super().__init__(name="Bus", speed_kmh=40, emissions_per_km=90, embodied_emissions= 20000, capacity=50)
 
     def get_speed(self, traffic_level: int) -> float:
         """
