@@ -15,21 +15,60 @@ class City:
 
         # Expanded OD matrix (distances in km, more pairs)
         self.od_matrix = {
-            ("Centrum", "Strijp-S"): 2.0,
-            ("Centrum", "TU/e"): 2.5,
-            ("Centrum", "Woensel"): 4.0,
-            ("Centrum", "Tongelre"): 3.2,
-            ("Centrum", "Gestel"): 3.8,
-            ("Strijp-S", "TU/e"): 3.0,
-            ("Strijp-S", "Woensel"): 4.5,
-            ("Strijp-S", "Tongelre"): 4.0,
-            ("Strijp-S", "Gestel"): 2.5,
-            ("TU/e", "Woensel"): 2.2,
-            ("TU/e", "Tongelre"): 2.8,
-            ("TU/e", "Gestel"): 4.1,
-            ("Woensel", "Tongelre"): 3.5,
-            ("Woensel", "Gestel"): 5.0,
-            ("Tongelre", "Gestel"): 4.3,
+
+            # Origin Wielewaal
+            ("Wielewaal", "Airport"): 6.5,
+            ("Wielewaal", "Meerhoven shopping center"): 4.2,
+            ("Wielewaal", "High Tech Campus"): 8.1,
+            ("Wielewaal", "Eindhoven City Centre"): 7.0,
+            ("Wielewaal", "Eindhoven Station Strijp-S"): 6.8,
+            ("Wielewaal", "Flight Forum"): 5.7,
+            ("Wielewaal", "SintLucas"): 7.3,
+            ("Wielewaal", "TU/e"): 8.5,
+            ("Wielewaal", "Medisch Centrum Boschdijk"): 5.9,
+            ("Wielewaal", "Obs de Opbouw"): 4.8,
+
+            # Origin Barrier
+            ("Barrier", "Airport"): 7.2,
+            ("Barrier", "Eindhoven City Centre"): 3.5,
+            ("Barrier", "Eindhoven Station Strijp S"): 4.0,
+            ("Barrier", "Winkelcentrum Woensel"): 5.1,
+            ("Barrier", "Flight Forum"): 6.0,
+            ("Barrier", "High Tech Campus"): 7.8,
+            ("Barrier", "Antoon Schellenscollege"): 2.9,
+            ("Barrier", "TU/e"): 4.3,
+            ("Barrier", "Medisch Centrum Boschdijk"): 5.5,
+            ("Barrier", "Obs de Opbouw"): 6.2,
+
+            # Origin Muscherg, Geestenberg
+            ("Muscherg", "Airport"): 8.0,
+            ("Muscherg", "Eindhoven City Centre"): 4.5,
+            ("Muscherg", "Eindhoven Central Station"): 5.0,
+            ("Muscherg", "De Kade"): 3.8,
+            ("Muschberg", "High Tech Campus"): 6.5,
+            ("Muscherg", "Lorentz Casimir Lyceum"): 4.2,
+            ("Muscherg", "Flight Forum"): 7.0,
+            ("Muscherg", "TU/e"): 5.8,
+            ("Muscherg", "Stroomz Tongelre"): 4.0,
+            ("Muscherg", "BS 't Karregat Omnio"): 3.5,
+
+            # Origin Esp
+            ("Esp", "Airport"): 10.2,
+            ("Esp", "Eindhoven City Centre"): 6.7,
+            ("Esp", "Eindhoven Central Station"): 7.1,
+            ("Esp", "Het Facilitair Gezondheidscentrum"): 2.3,
+            ("Esp", "De Handreiking"): 3.0,
+
+            # Origin Sintenbuurt
+            ("Sintenbuurt", "High Tech Campus"): 5.4,
+            ("Sintenbuurt", "Eindhoven City Centre"): 2.1,
+            ("Sintenbuurt", "TU/e"): 3.2,
+            ("Sintenbuurt", "Airport"): 8.7,
+            ("Sintenbuurt", "Eindhoven Central Station"): 2.5,
+            ("Sintenbuurt", "Augustinianum"): 1.8,
+            ("Sintenbuurt", "Stroomz Stratum"): 2.9,
+            ("Sintenbuurt", "Bs de Klimboom"): 2.6,
+
         }
 
         # Ensure bidirectionality
