@@ -3,16 +3,30 @@ from tkinter import ttk
 import geopandas as gpd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import os
 
 from .simulation import Simulation
 
 class UI:
     def __init__(self):
         self.sim = Simulation()
-        self.origin = self.sim.city.zones
+        self.origin = ["Wielewaal", "Barrier", "Muschberg, Geestenberg", "Esp", "Sintenbuurt"]
         self.destination = self.sim.city.zones
         self.weather_types = self.sim.city.weather_types
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        geojson_path = os.path.join(base_dir, "data", "buurten.geojson")
+        self.zones_gdf = gpd.read_file(geojson_path)
         self.launch_ui()
+
+    def draw_map(self, selected_zone, ax):
+        self.zones_gdf.plot(ax=ax, color='lightgrey', edgecolor='black')
+        if selected_zone:
+            self.zones_gdf[self.zones_gdf['buurtnaam'] == selected_zone].plot(ax=ax, color='orange', edgecolor='red')
+
+    def update_map(self, selected_var, canvas, ax):
+        ax.clear()
+        self.draw_map(selected_var.get(), ax)
+        canvas.draw()
 
     def run_simulation(self):
         self.update_values()
@@ -46,7 +60,15 @@ class UI:
         self.start_var = tk.StringVar()
         
         for zone in self.origin:
-            ttk.Radiobutton(self.container, text=zone, variable=self.start_var, value=zone).pack(anchor='w')
+            ttk.Radiobutton(self.container, text=zone, variable=self.start_var, value=zone, 
+                            command=lambda: self.update_map(self.start_var, self.map_canvas, self.ax)).pack(anchor='w')
+            
+        # Map canvas
+        fig, self.ax = plt.subplots(figsize=(4, 4))
+        self.draw_map(self.start_var.get(), self.ax)
+        self.map_canvas = FigureCanvasTkAgg(fig, master=self.container)
+        self.map_canvas.get_tk_widget().pack(pady=10)
+
 
         ttk.Button(self.container, text="Next", command=self.show_tab2).pack(pady=10)
 
