@@ -1,5 +1,6 @@
 import random
 import os
+import csv
 from typing import List, Tuple
 from .vehicle import FatBike, Car, Bus
 from .trip import Trip
@@ -13,66 +14,14 @@ class City:
         self.zones = ["Centrum", "Strijp-S", "TU/e", "Woensel", "Tongelre", "Gestel"]
         self.use_real_data = use_real_data or (os.environ.get("USE_REAL_TRAFFIC", "0") == "1")
 
-        # Expanded OD matrix (distances in km, more pairs)
-        self.od_matrix = {
-
-            # Origin Wielewaal
-            ("Wielewaal", "Airport"): 6.5,
-            ("Wielewaal", "Meerhoven shopping center"): 4.2,
-            ("Wielewaal", "High Tech Campus"): 8.1,
-            ("Wielewaal", "Eindhoven City Centre"): 7.0,
-            ("Wielewaal", "Eindhoven Station Strijp-S"): 6.8,
-            ("Wielewaal", "Flight Forum"): 5.7,
-            ("Wielewaal", "SintLucas"): 7.3,
-            ("Wielewaal", "TU/e"): 8.5,
-            ("Wielewaal", "Medisch Centrum Boschdijk"): 5.9,
-            ("Wielewaal", "Obs de Opbouw"): 4.8,
-
-            # Origin Barrier
-            ("Barrier", "Airport"): 7.2,
-            ("Barrier", "Eindhoven City Centre"): 3.5,
-            ("Barrier", "Eindhoven Station Strijp S"): 4.0,
-            ("Barrier", "Winkelcentrum Woensel"): 5.1,
-            ("Barrier", "Flight Forum"): 6.0,
-            ("Barrier", "High Tech Campus"): 7.8,
-            ("Barrier", "Antoon Schellenscollege"): 2.9,
-            ("Barrier", "TU/e"): 4.3,
-            ("Barrier", "Medisch Centrum Boschdijk"): 5.5,
-            ("Barrier", "Obs de Opbouw"): 6.2,
-
-            # Origin Muscherg, Geestenberg
-            ("Muscherg", "Airport"): 8.0,
-            ("Muscherg", "Eindhoven City Centre"): 4.5,
-            ("Muscherg", "Eindhoven Central Station"): 5.0,
-            ("Muscherg", "De Kade"): 3.8,
-            ("Muschberg", "High Tech Campus"): 6.5,
-            ("Muscherg", "Lorentz Casimir Lyceum"): 4.2,
-            ("Muscherg", "Flight Forum"): 7.0,
-            ("Muscherg", "TU/e"): 5.8,
-            ("Muscherg", "Stroomz Tongelre"): 4.0,
-            ("Muscherg", "BS 't Karregat Omnio"): 3.5,
-
-            # Origin Esp
-            ("Esp", "Airport"): 10.2,
-            ("Esp", "Eindhoven City Centre"): 6.7,
-            ("Esp", "Eindhoven Central Station"): 7.1,
-            ("Esp", "Het Facilitair Gezondheidscentrum"): 2.3,
-            ("Esp", "De Handreiking"): 3.0,
-
-            # Origin Sintenbuurt
-            ("Sintenbuurt", "High Tech Campus"): 5.4,
-            ("Sintenbuurt", "Eindhoven City Centre"): 2.1,
-            ("Sintenbuurt", "TU/e"): 3.2,
-            ("Sintenbuurt", "Airport"): 8.7,
-            ("Sintenbuurt", "Eindhoven Central Station"): 2.5,
-            ("Sintenbuurt", "Augustinianum"): 1.8,
-            ("Sintenbuurt", "Stroomz Stratum"): 2.9,
-            ("Sintenbuurt", "Bs de Klimboom"): 2.6,
-
-        }
-
-        # Ensure bidirectionality
-        self.od_matrix.update({(dst, src): dist for (src, dst), dist in self.od_matrix.items()})
+        # Load OD matrix from CSV
+        self.od_matrix = self.load_od_matrix_from_csv()
+        # Ensure bidirectionality for each mode
+        new_od_matrix = {}
+        for (src, dst), modes in self.od_matrix.items():
+            new_od_matrix[(src, dst)] = modes
+            new_od_matrix[(dst, src)] = modes
+        self.od_matrix = new_od_matrix
 
         self.vehicles = [FatBike(), Car(), Bus()]
 
@@ -94,15 +43,42 @@ class City:
         if seed is not None:
             random.seed(seed)
 
+    def load_od_matrix_from_csv(self):
+        od_matrix = {}
+        csv_path = 'simulation/Origin to POI.csv'
+        with open(csv_path, encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            current_origin = None
+            for row in reader:
+                origin = row["Origin"].strip() if row["Origin"].strip() else current_origin
+                if not origin:
+                    continue
+                current_origin = origin
+                destination = row["Destination"].strip()
+                if not destination:
+                    continue
+                try:
+                    car_dist = float(row['Distance (by car, in km)']) if row['Distance (by car, in km)'] else None
+                    bike_dist = float(row['Distance (by bike, in km)']) if row['Distance (by bike, in km)'] else None
+                except Exception:
+                    car_dist = None
+                    bike_dist = None
+                if car_dist is not None or bike_dist is not None:
+                    od_matrix[(origin, destination)] = {"car": car_dist, "bike": bike_dist}
+        return od_matrix
+
     def random_od_pair(self) -> Tuple[str, str]:
         return random.choice(list(self.od_matrix.keys()))
 
-    def od_distance(self, origin: str, destination: str) -> float:
+    def od_distance(self, origin: str, destination: str, mode: str = "car") -> float:
         if self.use_real_data:
             dist = traffic_api.get_real_distance(origin, destination)
             if dist:
                 return dist
-        return self.od_matrix.get((origin, destination), None)
+        d = self.od_matrix.get((origin, destination), None)
+        if isinstance(d, dict):
+            return d.get(mode, None)
+        return d
 
     def random_traffic_level(self, origin: str, destination: str, time_of_day: str) -> int:
         if self.use_real_data:
@@ -117,9 +93,10 @@ class City:
 
     def generate_random_trip(self, time_of_day: str = "rush_hour") -> Trip:
         origin, destination = self.random_od_pair()
-        distance = self.od_distance(origin, destination)
-        traffic = self.random_traffic_level(origin, destination, time_of_day)
         vehicle = random.choice(self.vehicles)
+        mode = "bike" if vehicle.name == "FatBike" else "car"
+        distance = self.od_distance(origin, destination, mode)
+        traffic = self.random_traffic_level(origin, destination, time_of_day)
         weather = self.random_weather()
         effects = self.weather_effects[weather]
 
@@ -140,9 +117,3 @@ class City:
         trip.weather_emission_factor = effects["emission_factor"]
         return trip
 
-    def generate_many_trips(self, n: int, time_of_day: str = "rush_hour") -> List[Trip]:
-        return [self.generate_random_trip(time_of_day) for _ in range(n)]
-
-    def simulate_trips(self, n: int, time_of_day: str = "rush_hour") -> List[dict]:
-        trips = self.generate_many_trips(n, time_of_day)
-        return [trip.summary() for trip in trips]

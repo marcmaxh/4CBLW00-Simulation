@@ -111,3 +111,37 @@ def plot_summary(summary: Dict):
     # Print delay stats
     print(f"Delayed trips (>6min): {delayed_trips} / {total_trips} ({100*delayed_trips/total_trips:.1f}%), Avg delay: {avg_delay_min:.1f} min")
 
+
+def plot_distributions_per_vehicle(results: List[Dict]):
+    """
+    Plots distribution histograms for trip duration, emissions, and emissions per passenger per vehicle type.
+    """
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from collections import defaultdict
+
+    metrics = [
+        ("duration_hr", "Trip Duration (hours)", "Duration (hours)"),
+        ("emissions_total_g", "Total Emissions (g CO₂)", "Emissions (g CO₂)"),
+        ("emissions_per_passenger_g", "Emissions per Passenger (g CO₂)", "Emissions per Passenger (g CO₂)")
+    ]
+    vehicle_types = set(trip["vehicle"] for trip in results)
+    data = {metric: defaultdict(list) for metric, _, _ in metrics}
+    for trip in results:
+        for metric, _, _ in metrics:
+            data[metric][trip["vehicle"]].append(trip[metric])
+
+    fig, axs = plt.subplots(1, len(metrics), figsize=(6 * len(metrics), 5))
+    if len(metrics) == 1:
+        axs = [axs]
+    colors = ["red", "blue", "green", "orange", "purple"]
+    for idx, (metric, title, xlabel) in enumerate(metrics):
+        for i, v in enumerate(sorted(vehicle_types)):
+            axs[idx].hist(data[metric][v], bins=20, alpha=0.6, label=v, color=colors[i % len(colors)])
+        axs[idx].set_title(title)
+        axs[idx].set_xlabel(xlabel)
+        axs[idx].set_ylabel("Number of Trips")
+        axs[idx].legend()
+    plt.tight_layout()
+    plt.show()
+
