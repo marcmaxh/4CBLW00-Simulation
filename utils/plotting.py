@@ -5,7 +5,8 @@ import numpy as np
 
 def summarize_for_plot(results: List[Dict]) -> Dict:
     """
-    Summarizes emissions, time, occupancy, weather, and delays per vehicle type.
+    Summarizes emissions, time, weather, and delays per vehicle type.
+    (Occupancy is not included in the summary.)
     """
     summary = {}
     weather_counter = Counter()
@@ -19,13 +20,11 @@ def summarize_for_plot(results: List[Dict]) -> Dict:
             summary[v] = {
                 "total_emissions": 0,
                 "total_time": 0,
-                "total_passengers": 0,
                 "total_emissions_per_passenger": 0,
                 "count": 0
             }
         summary[v]["total_emissions"] += trip["emissions_total_g"]
         summary[v]["total_time"] += trip["duration_hr"]
-        summary[v]["total_passengers"] += trip["passengers"]
         summary[v]["total_emissions_per_passenger"] += trip["emissions_per_passenger_g"]
         summary[v]["count"] += 1
         weather_counter[trip["weather"]] += 1
@@ -41,7 +40,6 @@ def summarize_for_plot(results: List[Dict]) -> Dict:
     for v in summary:
         summary[v]["avg_emissions"] = summary[v]["total_emissions"] / summary[v]["count"]
         summary[v]["avg_time"] = summary[v]["total_time"] / summary[v]["count"]
-        summary[v]["avg_occupancy"] = summary[v]["total_passengers"] / summary[v]["count"]
         summary[v]["avg_emissions_per_passenger"] = summary[v]["total_emissions_per_passenger"] / summary[v]["count"]
     summary["weather_distribution"] = dict(weather_counter)
     summary["duration_list"] = duration_list
@@ -53,12 +51,12 @@ def summarize_for_plot(results: List[Dict]) -> Dict:
 
 def plot_summary(summary: Dict):
     """
-    Plots average emissions, time, occupancy, emissions per passenger, weather, and trip duration distribution.
+    Plots average emissions, time, emissions per passenger, weather, and trip duration distribution.
+    (Occupancy is not shown.)
     """
     vehicles = [v for v in summary if v not in ["weather_distribution", "duration_list", "delayed_trips", "total_trips", "avg_delay_min"]]
     avg_emissions = [summary[v]["avg_emissions"] for v in vehicles]
     avg_time = [summary[v]["avg_time"] for v in vehicles]
-    avg_occupancy = [summary[v]["avg_occupancy"] for v in vehicles]
     avg_emissions_per_passenger = [summary[v]["avg_emissions_per_passenger"] for v in vehicles]
     weather_dist = summary["weather_distribution"]
     duration_list = summary["duration_list"]
@@ -66,7 +64,7 @@ def plot_summary(summary: Dict):
     total_trips = summary["total_trips"]
     avg_delay_min = summary["avg_delay_min"]
 
-    fig, axs = plt.subplots(2, 3, figsize=(18, 10))
+    fig, axs = plt.subplots(2, 2, figsize=(14, 10))
     fig.suptitle("Simulation Results: Detailed Analysis")
 
     # Plot 1: Emissions
@@ -81,29 +79,17 @@ def plot_summary(summary: Dict):
     axs[0, 1].set_ylabel("Time (hours)")
     axs[0, 1].set_xlabel("Vehicle Type")
 
-    # Plot 3: Occupancy
-    axs[0, 2].bar(vehicles, avg_occupancy, color=["red", "blue", "green"])
-    axs[0, 2].set_title("Avg Occupancy per Trip")
-    axs[0, 2].set_ylabel("Passengers")
-    axs[0, 2].set_xlabel("Vehicle Type")
-
-    # Plot 4: Emissions per Passenger
+    # Plot 3: Emissions per Passenger
     axs[1, 0].bar(vehicles, avg_emissions_per_passenger, color=["red", "blue", "green"])
     axs[1, 0].set_title("Avg Emissions per Passenger (g CO₂)")
     axs[1, 0].set_ylabel("g CO₂ / Passenger")
     axs[1, 0].set_xlabel("Vehicle Type")
 
-    # Plot 5: Weather distribution
+    # Plot 4: Weather distribution
     axs[1, 1].bar(weather_dist.keys(), weather_dist.values(), color=["gold", "skyblue", "gray", "lightgreen"][:len(weather_dist)])
     axs[1, 1].set_title("Weather Distribution")
     axs[1, 1].set_ylabel("Number of Trips")
     axs[1, 1].set_xlabel("Weather")
-
-    # Plot 6: Trip duration histogram
-    axs[1, 2].hist(duration_list, bins=20, color="purple", alpha=0.7)
-    axs[1, 2].set_title("Trip Duration Distribution")
-    axs[1, 2].set_xlabel("Duration (hours)")
-    axs[1, 2].set_ylabel("Number of Trips")
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.show()

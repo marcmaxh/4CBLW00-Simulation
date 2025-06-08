@@ -117,3 +117,27 @@ class City:
         trip.weather_emission_factor = effects["emission_factor"]
         return trip
 
+    def generate_random_trip_for_od(self, origin: str, destination: str, time_of_day: str = "rush_hour") -> Trip:
+        vehicle = random.choice(self.vehicles)
+        mode = "bike" if vehicle.name == "FatBike" else "car"
+        distance = self.od_distance(origin, destination, mode)
+        traffic = self.random_traffic_level(origin, destination, time_of_day)
+        weather = self.random_weather()
+        effects = self.weather_effects[weather]
+
+        # More realistic passenger distribution
+        if vehicle.name == "Bus":
+            passengers = int(random.gauss(25, 10))
+            passengers = max(5, min(vehicle.capacity, passengers))
+        elif vehicle.name == "Car":
+            passengers = random.choices([1, 2, 3, 4], weights=[60, 25, 10, 5])[0]
+        else:
+            passengers = 1
+
+        trip = Trip(vehicle, distance, traffic, passengers)
+        trip.origin = origin
+        trip.destination = destination
+        trip.weather = weather
+        trip.weather_speed_factor = effects["speed_factor"]
+        trip.weather_emission_factor = effects["emission_factor"]
+        return trip
