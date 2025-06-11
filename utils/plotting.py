@@ -97,6 +97,8 @@ def plot_summary(summary: Dict):
     # Print delay stats
     print(f"Delayed trips (>6min): {delayed_trips} / {total_trips} ({100*delayed_trips/total_trips:.1f}%), Avg delay: {avg_delay_min:.1f} min")
 
+    return fig
+
 
 def plot_distributions_per_vehicle(results: List[Dict]):
     """
