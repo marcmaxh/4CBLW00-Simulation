@@ -92,7 +92,7 @@ def plot_summary(summary: Dict):
     axs[1, 1].set_xlabel("Weather")
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-    plt.show()
+    # plt.show()
 
     # Print delay stats
     print(f"Delayed trips (>6min): {delayed_trips} / {total_trips} ({100*delayed_trips/total_trips:.1f}%), Avg delay: {avg_delay_min:.1f} min")
@@ -131,5 +131,6 @@ def plot_distributions_per_vehicle(results: List[Dict]):
         axs[idx].set_ylabel("Number of Trips")
         axs[idx].legend()
     plt.tight_layout()
-    plt.show()
+    # plt.show()
+    return fig
 

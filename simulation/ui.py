@@ -50,26 +50,46 @@ class UI:
 
     def show_summary_plot(self, results):
         summary = plotting.summarize_for_plot(results)
-        fig = plotting.plot_summary(summary)
+        fig1 = plotting.plot_summary(summary)
+        fig2 = plotting.plot_distributions_per_vehicle(results)
+
+        # Create a new Toplevel window
+        plot_window = tk.Toplevel(self.root)
+        plot_window.title("Simulation Plots")
+
+        # Create a Notebook (tabbed interface) to switch between plots
+        notebook = ttk.Notebook(plot_window)
+        notebook.pack(fill=tk.BOTH, expand=True)
+
+        # Tab 1: Summary plot
+        frame1 = ttk.Frame(notebook)
+        notebook.add(frame1, text="Summary")
+        canvas1 = FigureCanvasTkAgg(fig1, master=frame1)
+        canvas1.draw()
+        canvas1.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        # Tab 2: Distributions plot
+        frame2 = ttk.Frame(notebook)
+        notebook.add(frame2, text="Distributions")
+        canvas2 = FigureCanvasTkAgg(fig2, master=frame2)
+        canvas2.draw()
+        canvas2.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        # Add close button in the new window
+        button_frame = ttk.Frame(plot_window)
+        button_frame.pack(pady=10)
+        ttk.Button(button_frame, text="Close", command=plot_window.destroy).pack()
+
+        # Control window still shows Restart and Back
         self.clear_container()
-
-         # Create a frame to hold the plot
-        plot_frame = ttk.Frame(self.container)
-        plot_frame.pack(fill=tk.BOTH, expand=True)
-
-        # Embed the matplotlib figure in the Tkinter UI
-        canvas = FigureCanvasTkAgg(fig, master=plot_frame)
-        canvas.draw()
-        canvas_widget = canvas.get_tk_widget()
-        canvas_widget.pack(fill=tk.BOTH, expand=True)
-
+        tk.Label(self.container, text="Simulation Completed", font=("Arial", 14)).pack(pady=10)
         tk.Label(self.container, textvariable=self.status_var, fg='gray').pack(pady=5)
 
-        # Back to Tab 3
-        button_frame = ttk.Frame(self.container)
-        ttk.Button(button_frame, text="Back", command=self.show_tab3).pack(side="left", padx=10)
-        ttk.Button(button_frame, text="Restart", command=self.show_tab1).pack(side="right", padx=10)
-
+        btn_frame = ttk.Frame(self.container)
+        btn_frame.pack(pady=10, fill='x')
+        ttk.Button(btn_frame, text="Back", command=self.show_tab3).pack(side="left", padx=10)
+        ttk.Button(btn_frame, text="Restart", command=self.show_tab1).pack(side="right", padx=10)
+        
     def update_values(self):
         self.start = self.start_var.get() if hasattr(self, 'start_var') else 'N/A'
         self.end = self.end_var.get() if hasattr(self, 'end_var') else 'N/A'
@@ -194,10 +214,10 @@ class UI:
         self.update_values()
         self.clear_container()
 
-        # Optional: Indicate simulation is running
+        # Indicate simulation is running
         loading_label = tk.Label(self.container, text="Running simulation...", font=("Arial", 12, "italic"))
         loading_label.pack(pady=20)
-        self.root.update_idletasks()  # Force immediate update of the UI
+        self.root.update_idletasks()  # Force UI update
 
         # Run the simulation
         self.sim.set_time_of_day(self.tod)
@@ -206,7 +226,7 @@ class UI:
         # Remove loading label
         loading_label.destroy()
 
-        # Show the plot
+        # Show the plots
         self.show_summary_plot(result)
 
     def clear_container(self):
