@@ -4,7 +4,7 @@ vehicle_config = {
         "base_speed_kmh": 18,
         "emissions_per_km": 0,  # g CO2/km
         "embodied_emissions": 100,  # estimate, can be adjusted
-        "capacity": 1
+        "capacity": 2
     },
     "Car": {
         "name": "Car",
