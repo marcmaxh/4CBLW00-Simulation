@@ -69,7 +69,7 @@ class RealTimeSimulation:
             for s in self.scenarios:
                 # Generate trip request?
                 if random.random() < trip_probs[s][block]:
-                    trip = self.city.generate_random_trip()
+                    trip = self.city.generate_fatbike_taxi_trip()
                     queues[s].append((minute, trip))
                     stats[s]["total"] += 1
                     self.logger.debug(f"[{s}] Trip requested at min {minute} in block {block}")
@@ -77,18 +77,29 @@ class RealTimeSimulation:
                 riders = available_riders[s][block]
                 serviced_now = 0
                 new_queue = deque()
-                while queues[s] and serviced_now < riders:
+                # Only service as many trips as there are available riders, but account for ride duration
+                # Track when each rider will be free (list of end times)
+                if not hasattr(self, 'rider_busy_until'):
+                    self.rider_busy_until = {s: {block: [] for block in self.demand} for s in self.scenarios}
+                # Remove riders who are now free
+                self.rider_busy_until[s][block] = [t for t in self.rider_busy_until[s][block] if t > minute]
+                available_now = riders - len(self.rider_busy_until[s][block])
+                while queues[s] and serviced_now < available_now:
                     req_minute, trip = queues[s].popleft()
                     wait = minute - req_minute
                     stats[s]["wait_times"].append(wait)
                     stats[s]["serviced"] += 1
                     serviced_now += 1
-                    self.logger.debug(f"[{s}] Trip serviced after {wait} min wait at min {minute}")
-                # For remaining queued trips, check timeout (now 15 min)
+                    # Calculate ride duration in minutes
+                    ride_duration_min = int(round(trip.get_duration_hours() * 60))
+                    self.rider_busy_until[s][block].append(minute + ride_duration_min)
+                    self.logger.debug(f"[{s}] Trip serviced after {wait} min wait at min {minute}, ride duration {ride_duration_min} min")
+                    print(f"[SUCCESS] Scenario: {s}, Time: {minute//60:02d}:{minute%60:02d}, Wait: {wait} min, Duration: {ride_duration_min} min, Origin: {trip.origin}, Destination: {trip.destination}")
+                # For remaining queued trips, check timeout (now 5 min)
                 while queues[s]:
                     req_minute, trip = queues[s].popleft()
                     wait = minute - req_minute
-                    if wait >= 15:
+                    if wait >= 5:
                         # Cancel with probability
                         if random.random() < self.cancel_prob:
                             stats[s]["unsuccessful"] += 1
