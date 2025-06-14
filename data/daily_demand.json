@@ -1,0 +1,49 @@
+{
+  "time_blocks": {
+    "morning_peak": {
+      "start": "07:00",
+      "end": "09:30",
+      "minutes": 150,
+      "optimistic": 583,
+      "moderate": 280,
+      "pessimistic": 105,
+      "riders": 20
+    },
+    "midday_offpeak": {
+      "start": "9:30",
+      "end": "15:30",
+      "minutes": 360,
+      "optimistic": 537,
+      "moderate": 258,
+      "pessimistic": 96,
+      "riders": 10
+    },
+    "evening_peak": {
+        "start": "15:30",
+        "end": "18:30",
+        "minutes": 180,
+        "optimistic": 700,
+        "moderate": 336,
+        "pessimistic": 126,
+        "riders": 15
+    },
+    "evening_offpeak": {
+      "start": "18:30",
+      "end": "22:00",
+      "minutes": 210,
+      "optimistic": 396,
+      "moderate": 190,
+      "pessimistic": 71,
+      "riders": 5
+    },
+    "night": {
+      "start": "22:00",
+      "end": "7:00",
+      "minutes": 540,
+      "optimistic": 116,
+      "moderate": 56,
+      "pessimistic": 21,
+      "riders": 2
+    }
+  }
+}
