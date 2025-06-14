@@ -141,3 +141,25 @@ class City:
         trip.weather_speed_factor = effects["speed_factor"]
         trip.weather_emission_factor = effects["emission_factor"]
         return trip
+
+    def generate_fatbike_taxi_trip(self, time_of_day: str = "rush_hour") -> Trip:
+        """
+        Generate a trip where a customer is taken as a passenger on the back of a fat bike
+        (Uber-like fat bike taxi service). Always uses a FatBike, random OD pair, and 2 passengers.
+        """
+        origin, destination = self.random_od_pair()
+        fatbike = FatBike()
+        mode = "bike"
+        distance = self.od_distance(origin, destination, mode)
+        traffic = self.random_traffic_level(origin, destination, time_of_day)
+        weather = self.random_weather()
+        effects = self.weather_effects[weather]
+        passengers = 2  # Always 2: rider + customer
+        trip = Trip(fatbike, distance, traffic, passengers)
+        trip.origin = origin
+        trip.destination = destination
+        trip.weather = weather
+        trip.weather_speed_factor = effects["speed_factor"]
+        trip.weather_emission_factor = effects["emission_factor"]
+        return trip
+
