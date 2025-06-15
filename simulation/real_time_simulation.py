@@ -59,6 +59,7 @@ class RealTimeSimulation:
         queues = {s: deque() for s in self.scenarios}
         stats = {s: {"wait_times": [], "serviced": 0, "unsuccessful": 0, "total": 0} for s in self.scenarios}
         trip_probs = {s: {} for s in self.scenarios}
+        self.serviced_rides = {s: [] for s in self.scenarios}
         for block, info in self.demand.items():
             for s in self.scenarios:
                 trip_probs[s][block] = info[s] / info["minutes"]
@@ -93,6 +94,8 @@ class RealTimeSimulation:
                     # Calculate ride duration in minutes
                     ride_duration_min = int(round(trip.get_duration_hours() * 60))
                     self.rider_busy_until[s][block].append(minute + ride_duration_min)
+                    # Store ride distance for profit calculation
+                    self.serviced_rides[s].append({"distance_km": trip.get_distance_km()})
                     self.logger.debug(f"[{s}] Trip serviced after {wait} min wait at min {minute}, ride duration {ride_duration_min} min")
                     print(f"[SUCCESS] Scenario: {s}, Time: {minute//60:02d}:{minute%60:02d}, Wait: {wait} min, Duration: {ride_duration_min} min, Origin: {trip.origin}, Destination: {trip.destination}")
                 # For remaining queued trips, check timeout (now 5 min)
@@ -126,14 +129,23 @@ class RealTimeSimulation:
         return stats
 
     def print_results(self):
+        total_profit = 0.0
         for s in self.scenarios:
             total = self.stats[s]["total"]
             serviced = self.stats[s]["serviced"]
             unsuccessful = self.stats[s]["unsuccessful"]
             avg_wait = sum(self.stats[s]["wait_times"]) / serviced if serviced > 0 else 0
+            # Calculate profit for this scenario
+            profit = 0.0
+            if hasattr(self, "serviced_rides") and s in self.serviced_rides:
+                for ride in self.serviced_rides[s]:
+                    ride_profit = 1.5 + 0.2 * ride["distance_km"]
+                    profit += ride_profit
             print(f"\nScenario: {s.title()}")
             print(f"  Total trip requests: {total}")
             print(f"  Successful rides: {serviced} ({100*serviced/total:.1f}%)")
             print(f"  Unsuccessful rides: {unsuccessful} ({100*unsuccessful/total:.1f}%)")
             print(f"  Average wait time (min): {avg_wait:.2f}")
-
+            print(f"  Total profit: €{profit:.2f}")
+            total_profit += profit
+        print(f"\n=== TOTAL PROFIT (all scenarios): €{total_profit:.2f} ===")

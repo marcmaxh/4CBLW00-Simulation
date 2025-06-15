@@ -30,6 +30,9 @@ class Trip:
     def get_emissions_per_passenger(self) -> float:
         return self.get_total_emissions() / self.passengers
 
+    def get_distance_km(self) -> float:
+        return self.distance_km
+
     def summary(self) -> dict:
         return {
             "vehicle": self.vehicle.name,
