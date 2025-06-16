@@ -1,0 +1,94 @@
+{
+  "Airport": {
+    "latitude": 51.45000,
+    "longitude": 5.37444
+  },
+  "Meerhoven shopping center": {
+    "latitude": 51.44278,
+    "longitude": 5.40222
+  },
+  "High Tech Campus": {
+    "latitude": 51.40889,
+    "longitude": 5.44889
+  },
+  "Eindhoven City Centre": {
+    "latitude": 51.44083,
+    "longitude": 5.47778
+  },
+  "Eindhoven Station Strijp-S": {
+    "latitude": 51.44861,
+    "longitude": 5.45694
+  },
+  "Eindhoven Station Strijp S": {
+    "latitude": 51.44861,
+    "longitude": 5.45694
+  },
+  "Flight Forum": {
+    "latitude": 51.44333,
+    "longitude": 5.39806
+  },
+  "SintLucas": {
+    "latitude": 51.42306,
+    "longitude": 5.48028
+  },
+  "TU/e": {
+    "latitude": 51.44833,
+    "longitude": 5.49000
+  },
+  "Medisch Centrum Boschdijk": {
+    "latitude": 51.45222,
+    "longitude": 5.46806
+  },
+  "Obs de Opbouw": {
+    "latitude": 51.45556,
+    "longitude": 5.46389
+  },
+  "Winkelcentrum Woensel": {
+    "latitude": 51.46083,
+    "longitude": 5.47500
+  },
+  "Antoon Schellenscollege": {
+    "latitude": 51.45833,
+    "longitude": 5.47222
+  },
+  "De Kade": {
+    "latitude": 51.43806,
+    "longitude": 5.48250
+  },
+  "Lorentz Casimir Lyceum": {
+    "latitude": 51.43583,
+    "longitude": 5.48611
+  },
+  "Stroomz Tongelre": {
+    "latitude": 51.43278,
+    "longitude": 5.49833
+  },
+  "BS 't Karregat Omnio": {
+    "latitude": 51.43000,
+    "longitude": 5.49500
+  },
+  "Eindhoven Central Station": {
+    "latitude": 51.44167,
+    "longitude": 5.48000
+  },
+  "Het Facilitair Gezondheidscentrum": {
+    "latitude": 51.43500,
+    "longitude": 5.49250
+  },
+  "De Handreiking": {
+    "latitude": 51.43306,
+    "longitude": 5.49028
+  },
+  "Augustinianum": {
+    "latitude": 51.42000,
+    "longitude": 5.50306
+  },
+  "Stroomz Stratum": {
+    "latitude": 51.42278,
+    "longitude": 5.50139
+  },
+  "Bs de Klimboom": {
+    "latitude": 51.42500,
+    "longitude": 5.50000
+  }
+}

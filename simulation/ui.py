@@ -4,6 +4,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+import json
 from PIL import Image, ImageTk
 import csv
 import os
@@ -37,16 +38,80 @@ class UI:
                 od_map[origin].add(destination)
         return od_map
 
-    def draw_map(self, selected_zone, ax):
-        self.zones_gdf.plot(ax=ax, color='lightgrey', edgecolor='black')
+    def apply_style(self):
+        self.bg_color = "#ACFFFC"  # deep blue
+        self.fg_color = "#FFFFFF"  # white
+        self.accent_color = "#3B82F6"  # lighter blue for accents
+        self.font = ("Arial", 12)
+
+        style = ttk.Style()
+        style.theme_use("clam")
+
+        # Background
+        style.configure(".", background=self.bg_color, foreground=self.fg_color, font=self.font)
+        style.configure("TButton", background=self.accent_color, foreground=self.fg_color)
+        style.map("TButton", background=[("active", "#2563EB")])
+        style.configure("TLabel", background=self.bg_color, foreground=self.fg_color)
+        style.configure("TRadiobutton", background=self.bg_color, foreground=self.fg_color)
+
+        self.root.configure(bg=self.bg_color)
+        self.container.configure(style="TFrame")
+
+    def draw_map(self, selected_zone, ax, dest=None):
+        self.zones_gdf.plot(ax=ax, color='azure', edgecolor='black')
+        for zone in self.origin:
+            self.zones_gdf[self.zones_gdf['buurtnaam'] == zone].plot(ax=ax, color='mediumseagreen', edgecolor='black')
         if selected_zone:
-            self.zones_gdf[self.zones_gdf['buurtnaam'] == selected_zone].plot(ax=ax, color='orange', edgecolor='red')
+            self.zones_gdf[self.zones_gdf['buurtnaam'] == selected_zone].plot(ax=ax, color='lime', edgecolor='black')
+        if dest != None:
+            dx, dy = self.dest_coords[dest]
+            ax.scatter(dx, dy, color='black', marker='x', s=80, label="Destinations")
+
 
     def update_map(self, selected_var, canvas, ax):
         ax.clear()
         self.draw_map(selected_var.get(), ax)
         canvas.draw()
+    
+    def update_odmap(self, dest):
+        if not hasattr(self, 'ax_tab2'):
+            return
+            
+        self.ax_tab2.clear()
 
+        # Calculate aspect ratio again to maintain it
+        bounds = self.zones_gdf.total_bounds
+        x_range = bounds[2] - bounds[0]
+        y_range = bounds[3] - bounds[1]
+        aspect_ratio = y_range / x_range
+        self.ax_tab2.set_aspect(aspect_ratio)
+        
+        # Plot all zones
+        self.zones_gdf.plot(ax=self.ax_tab2, color='azure', edgecolor='black', alpha=0.5)
+        
+        # Highlight origin
+        origin = self.start_var.get()
+        if origin:
+            self.zones_gdf[self.zones_gdf['buurtnaam'] == origin].plot(
+                ax=self.ax_tab2, color='lime', edgecolor='black', alpha=0.7
+            )
+        
+        # Plot destination marker
+        if dest and dest in self.dest_coords:
+            coords = self.dest_coords[dest]
+            self.ax_tab2.scatter(
+                coords['longitude'], 
+                coords['latitude'], 
+                color='yellow', 
+                s=80,
+                marker='X',
+                edgecolor='black',
+                label=dest
+            )
+        
+        # Set title and legend
+        self.ax_tab2.set_title(f"Origin: {origin}\nDestination: {dest if dest else 'Not selected'}")
+        self.canvas_tab2.draw()
 
     def show_summary_plot(self, results):
         summary = plotting.summarize_for_plot(results)
@@ -100,6 +165,9 @@ class UI:
     def launch_ui(self):
         csv_path = os.path.join(self.base_dir, "simulation", "Origin to POI.csv")
         self.od_map = self.load_csv(csv_path)
+        json_path = os.path.join(self.base_dir, "data", "destination_coordinates.json")
+        with open(json_path, 'r', encoding='utf-8') as file:
+            self.dest_coords = json.load(file)
         self.origin = sorted(self.od_map.keys())
         self.origin.remove('\ufeffOrigin')
     
@@ -109,6 +177,7 @@ class UI:
         self.container = ttk.Frame(self.root)
         self.container.pack(padx=20, pady=20)
         self.status_var = tk.StringVar()
+        # self.apply_style()
         self.show_tab1()
         self.root.mainloop()
 
@@ -138,41 +207,87 @@ class UI:
     def show_tab2(self):
         self.update_values()
         self.clear_container()
+        self.dest_img_refs = []
 
         selected_origin = self.start_var.get()
         valid_destinations = sorted(self.od_map.get(selected_origin, []))
-        self.dest_img_refs = []
 
+        # Create main container frame
+        main_frame = ttk.Frame(self.container)
+        main_frame.pack(fill=tk.BOTH, expand=True)
 
-        tk.Label(self.container, text="End Location").pack()
+        # Left frame for destination selection
+        left_frame = ttk.Frame(main_frame, width=300)
+        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=False, padx=10, pady=10)
+
+        tk.Label(left_frame, text="End Location", font=("Arial", 12, "bold")).pack(pady=(0, 10))
         self.end_var = tk.StringVar()
 
+        # Create canvas for scrolling
+        canvas = tk.Canvas(left_frame)
+        scrollbar = ttk.Scrollbar(left_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+
+        scrollable_frame.bind(
+        "<Configure>",
+        lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
         for dest in valid_destinations:
-            # ttk.Radiobutton(self.container, text=dest, variable=self.end_var, value=dest).pack(anchor='w')
-            frame = tk.Frame(self.container)
-            frame.pack(fill='x', pady=4, padx=10)
+            frame = tk.Frame(scrollable_frame)
+            frame.pack(fill='x', pady=4, padx=5)
 
             # Load image
             img_path = os.path.join(self.base_dir, "image", f"{dest.replace('/', '(').replace('_', ' ')}.jpg")
+            img = None
             if os.path.exists(img_path):
-                img = Image.open(img_path).resize((64, 64))
-                photo = ImageTk.PhotoImage(img)
-            else:
-                photo = None
+                try:
+                    img = Image.open(img_path).resize((64, 64))
+                    photo = ImageTk.PhotoImage(img)
+                    img_label = tk.Label(frame, image=photo)
+                    img_label.image = photo
+                    img_label.pack(side='left', padx=(0, 10))
+                    self.dest_img_refs.append(photo)
+                except Exception as e:
+                    print(f"Error loading image {img_path}: {str(e)}")
 
             # Destination name formatting
             dest_name = dest.replace("_", " ").title()
 
             # Radio button with image on the left
-            if photo:
-                img_label = tk.Label(frame, image=photo)
-                img_label.image = photo
-                img_label.pack(side='left', padx=(0, 10))
-                self.dest_img_refs.append(photo)
-
             radio_btn = ttk.Radiobutton(frame, text=dest_name, variable=self.end_var, value=dest,
-                                        command=self.update_values)
+                                        command=lambda d=dest: self.update_odmap(d))
             radio_btn.pack(side='left')
+
+        # Right frame for map
+        right_frame = ttk.Frame(main_frame)
+        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        # Create map
+        fig = Figure(figsize=(4, 4))
+        self.ax_tab2 = fig.add_subplot(111)
+
+        # Calculate proper aspect ratio based on coordinates
+        bounds = self.zones_gdf.total_bounds
+        x_range = bounds[2] - bounds[0]
+        y_range = bounds[3] - bounds[1]
+        aspect_ratio = y_range / x_range
+        
+        # Set the correct aspect ratio
+        self.ax_tab2.set_aspect(aspect_ratio)
+        
+        self.canvas_tab2 = FigureCanvasTkAgg(fig, master=right_frame)
+        self.canvas_tab2.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        # Draw initial map
+        self.update_odmap(None)
+
 
         # label
         tk.Label(self.container, textvariable=self.status_var, fg='gray').pack(pady=5)
@@ -232,3 +347,4 @@ class UI:
     def clear_container(self):
         for widget in self.container.winfo_children():
             widget.destroy()
+        self.container.configure(style="TFrame")
