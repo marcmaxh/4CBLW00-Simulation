@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+import tkinter.messagebox as messagebox
 import geopandas as gpd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -39,8 +40,8 @@ class UI:
         return od_map
 
     def apply_style(self):
-        self.bg_color = "#C6FCFF"
-        self.fg_color = "#4682B4"
+        self.bg_color = "#F0FFFF"
+        self.fg_color = "#7393B3"
         self.accent_color = "#87CEFA"
         self.font = ("Arial", 12)
 
@@ -58,11 +59,11 @@ class UI:
         self.container.configure(style="TFrame")
 
     def draw_map(self, selected_zone, ax, dest=None):
-        self.zones_gdf.plot(ax=ax, color='azure', edgecolor='black')
+        self.zones_gdf.plot(ax=ax, color=self.bg_color, edgecolor='black')
         for zone in self.origin:
-            self.zones_gdf[self.zones_gdf['buurtnaam'] == zone].plot(ax=ax, color='limegreen', edgecolor='black')
+            self.zones_gdf[self.zones_gdf['buurtnaam'] == zone].plot(ax=ax, color=self.fg_color, edgecolor='black')
         if selected_zone:
-            self.zones_gdf[self.zones_gdf['buurtnaam'] == selected_zone].plot(ax=ax, color='lime', edgecolor='black')
+            self.zones_gdf[self.zones_gdf['buurtnaam'] == selected_zone].plot(ax=ax, color=self.accent_color, edgecolor='black')
         if dest != None:
             dx, dy = self.dest_coords[dest]
             ax.scatter(dx, dy, color='black', marker='x', s=80, label="Destinations")
@@ -93,7 +94,7 @@ class UI:
         origin = self.start_var.get()
         if origin:
             self.zones_gdf[self.zones_gdf['buurtnaam'] == origin].plot(
-                ax=self.ax_tab2, color='lime', edgecolor='black', alpha=0.7
+                ax=self.ax_tab2, color=self.accent_color, edgecolor='black', alpha=0.7
             )
         
         # Plot destination marker
@@ -102,7 +103,7 @@ class UI:
             self.ax_tab2.scatter(
                 coords['longitude'], 
                 coords['latitude'], 
-                color='yellow', 
+                color='orange', 
                 s=80,
                 marker='X',
                 edgecolor='black',
@@ -110,7 +111,7 @@ class UI:
             )
         
         # Set title and legend
-        self.ax_tab2.set_title(f"Origin: {origin}\nDestination: {dest if dest else 'Not selected'}")
+        self.ax_tab2.set_title(f"Origin: {origin}\nDestination: {dest if dest else 'Not selected'}", color=self.fg_color)
 
         self.ax_tab2.set_facecolor(self.bg_color)
         self.canvas_tab2.draw()
@@ -150,18 +151,15 @@ class UI:
         # Control window still shows Restart and Back
         self.clear_container()
         ttk.Label(self.container, text="Simulation Completed", font=("Arial", 14)).pack(pady=10)
-        ttk.Label(self.container, textvariable=self.status_var, fg='gray').pack(pady=5)
-
-        btn_frame = ttk.Frame(self.container)
-        btn_frame.pack(pady=10, fill='x')
-        ttk.Button(btn_frame, text="Back", command=self.show_tab3).pack(side="left", padx=10)
-        ttk.Button(btn_frame, text="Restart", command=self.show_tab1).pack(side="right", padx=10)
+        ttk.Label(self.container, textvariable=self.status_var).pack(pady=5)
+        ttk.Button(self.container, text="Back", command=self.show_tab3).pack(side="left", padx=10)
+        ttk.Button(self.container, text="Restart", command=self.show_tab1).pack(side="right", padx=10)
         
     def update_values(self):
-        self.start = self.start_var.get() if hasattr(self, 'start_var') else 'N/A'
-        self.end = self.end_var.get() if hasattr(self, 'end_var') else 'N/A'
-        self.tod = self.time_var.get() if hasattr(self, 'time_var') else 'N/A'
-        self.weather = self.weather_var.get() if hasattr(self, 'weather_var') else 'N/A'
+        self.start = self.start_var.get() if hasattr(self, 'start_var') else ''
+        self.end = self.end_var.get() if hasattr(self, 'end_var') else ''
+        self.tod = self.time_var.get() if hasattr(self, 'time_var') else ''
+        self.weather = self.weather_var.get() if hasattr(self, 'weather_var') else ''
         self.status_var.set(f"Origin: {self.start}, Destination: {self.end}, Time: {self.tod}, Weather: {self.weather}")
 
     def launch_ui(self):
@@ -186,10 +184,17 @@ class UI:
     
     # Tab 1 - Start Point
     def show_tab1(self):
+        self.start_var = tk.StringVar()
+        self.update_values()
         self.clear_container()
 
+        def check_ready_and_proceed():
+            if not self.start_var.get():
+                messagebox.showwarning("Missing Info", "Please select a destination.")
+            else:
+                self.show_tab2()
+
         ttk.Label(self.container, text="Start Location", style="TLabel").pack(pady=10)
-        self.start_var = tk.StringVar()
         
         for zone in self.origin:
             ttk.Radiobutton(self.container, text=zone, variable=self.start_var, value=zone, 
@@ -205,11 +210,19 @@ class UI:
 
         ttk.Label(self.container, textvariable=self.status_var, style="TLabel").pack(pady=5)
 
-        ttk.Button(self.container, text="Next", command=self.show_tab2).pack(pady=10)
+        ttk.Button(self.container, text="Next", command=check_ready_and_proceed).pack(pady=10)
 
     # Tab 2 - End point dropdown
     def show_tab2(self):
+        self.end_var = tk.StringVar()
         self.update_values()
+
+        def check_ready_and_proceed():
+            if not self.end_var.get():
+                messagebox.showwarning("Missing Info", "Please select a destination.")
+            else:
+                self.show_tab3()
+
         self.clear_container()
         self.dest_img_refs = []
 
@@ -225,7 +238,6 @@ class UI:
         left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=False, padx=10, pady=10)
 
         ttk.Label(left_frame, text="End Location", font=("Arial", 12, "bold")).pack(pady=(0, 10))
-        self.end_var = tk.StringVar()
 
         # Create canvas for scrolling
         canvas = tk.Canvas(left_frame, bg=self.bg_color)
@@ -301,15 +313,25 @@ class UI:
         btn_frame = tk.Frame(self.container)
         btn_frame.pack(pady=10, fill='x')
         ttk.Button(self.container, text="Back", command=self.show_tab1).pack(side="left", padx=10, pady=10)
-        ttk.Button(self.container, text="Next", command=self.show_tab3).pack(side="right", padx=10, pady=10)
+        ttk.Button(self.container, text="Next", command=check_ready_and_proceed).pack(side="right", padx=10, pady=10)
 
     # Tab 3
     def show_tab3(self):
+        self.time_var = tk.StringVar()
+        self.weather_var = tk.StringVar()
         self.update_values()
         self.clear_container()
+
+        def check_ready_and_proceed():
+            if not self.time_var.get():
+                messagebox.showwarning("Missing Info", "Please select a time.")
+            elif not self.weather_var.get():
+                messagebox.showwarning("Missing Info", "Please select the weather.")
+            else:
+                self.show_tab4()
+
         # Time
         ttk.Label(self.container, text="Time of the day", font=("Arial", 14, "bold")).pack(pady=(10, 5))
-        self.time_var = tk.StringVar()
 
         for time in self.time_of_day:
             display_time = time.replace("_", " ").title()
@@ -318,7 +340,6 @@ class UI:
 
         # Weather
         ttk.Label(self.container, text="Weather", font=("Arial", 14, "bold")).pack(pady=(15, 5))
-        self.weather_var = tk.StringVar()
 
         for weather in self.weather_types:
             ttk.Radiobutton(self.container, text=weather.title(), variable=self.weather_var, value=weather, 
@@ -329,7 +350,7 @@ class UI:
         
         # Submit button
         ttk.Button(self.container, text="Back", command=self.show_tab2).pack(side="left", padx=10, pady=10)
-        tk.Button(self.container, text="Start Simulation", command=self.show_tab4).pack(side = "right", padx=10, pady=10)
+        ttk.Button(self.container, text="Start Simulation", command=check_ready_and_proceed).pack(side = "right", padx=10, pady=10)
 
     # Tab 4
     def show_tab4(self):
