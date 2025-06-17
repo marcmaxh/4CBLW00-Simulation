@@ -102,6 +102,21 @@ class Simulation:
         """
         self.time_of_day = time_of_day
 
+    def write_results_to_csv(self, results: List[Dict], filename: str = "simulation_results.csv"):
+        """
+        Write the simulation results to a CSV file.
+        """
+        if not results:
+            print("No results to write.")
+            return
+        import csv
+        keys = list(results[0].keys())
+        with open(filename, mode="w", newline='', encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=keys)
+            writer.writeheader()
+            writer.writerows(results)
+        print(f"Results written to {filename}")
+
 
 if __name__ == "__main__":
     sim = Simulation(num_trips=10000, use_real_data=False)
@@ -111,3 +126,6 @@ if __name__ == "__main__":
 
     summary = plotting.summarize_for_plot(results)
     plotting.plot_summary(summary)
+
+
+
