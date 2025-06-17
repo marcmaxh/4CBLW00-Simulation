@@ -21,6 +21,8 @@ def run_option_2():
     summary = plotting.summarize_for_plot(results)
     plotting.plot_summary(summary)
     plotting.plot_distributions_per_vehicle(results)
+    # Write results to CSV
+    sim.write_results_to_csv(results)
 
 #  Option 3: Run the real-time simulation
 def run_option_3():
