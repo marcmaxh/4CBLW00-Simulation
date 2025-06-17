@@ -6,6 +6,7 @@ from collections import deque, defaultdict
 from typing import Dict, List
 from .city import City
 from .trip import Trip
+import matplotlib.pyplot as plt
 
 TIME_BLOCKS = [
     ("morning_peak", "07:00", "09:30"),
@@ -128,6 +129,31 @@ class RealTimeSimulation:
         self.logger.info("Simulation complete.")
         return stats
 
+    def plot_success_pie(self):
+        """
+        Plot a pie chart for each scenario showing successful vs unsuccessful rides.
+        """
+        scenarios = self.scenarios
+        fig, axs = plt.subplots(1, len(scenarios), figsize=(6 * len(scenarios), 5))
+        if len(scenarios) == 1:
+            axs = [axs]
+        for idx, s in enumerate(scenarios):
+            serviced = self.stats[s]["serviced"]
+            unsuccessful = self.stats[s]["unsuccessful"]
+            total = serviced + unsuccessful
+            axs[idx].pie(
+                [serviced, unsuccessful],
+                labels=["Successful", "Unsuccessful"],
+                autopct=lambda p: f'{int(p * total / 100)} ({p:.1f}%)',
+                colors=["#00c49a", "#ff595e"],
+                startangle=90,
+                explode=(0.05, 0.05),
+            )
+            axs[idx].set_title(f"{s.title()} Scenario")
+        plt.suptitle("Ride Success Rate per Scenario")
+        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+        plt.show()
+
     def print_results(self):
         total_profit = 0.0
         for s in self.scenarios:
@@ -149,3 +175,5 @@ class RealTimeSimulation:
             print(f"  Total profit: €{profit:.2f}")
             total_profit += profit
         print(f"\n=== TOTAL PROFIT (all scenarios): €{total_profit:.2f} ===")
+        # Plot pie chart for each scenario
+        self.plot_success_pie()
