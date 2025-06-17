@@ -68,31 +68,31 @@ def plot_summary(summary: Dict):
     fig.suptitle("Simulation Results: Detailed Analysis")
 
     # Plot 1: Emissions
-    axs[0, 0].bar(vehicles, avg_emissions, color=["red", "blue", "green"])
+    axs[0, 0].bar(vehicles, avg_emissions, color=["#00a5cf", "#004e64", "#9fffcb"])
     axs[0, 0].set_title("Avg Emissions per Trip (g CO₂)")
     axs[0, 0].set_ylabel("Grams of CO₂")
     axs[0, 0].set_xlabel("Vehicle Type")
 
     # Plot 2: Time
-    axs[0, 1].bar(vehicles, avg_time, color=["red", "blue", "green"])
+    axs[0, 1].bar(vehicles, avg_time, color=["#00a5cf", "#004e64", "#9fffcb"])
     axs[0, 1].set_title("Avg Time per Trip (hours)")
     axs[0, 1].set_ylabel("Time (hours)")
     axs[0, 1].set_xlabel("Vehicle Type")
 
     # Plot 3: Emissions per Passenger
-    axs[1, 0].bar(vehicles, avg_emissions_per_passenger, color=["red", "blue", "green"])
+    axs[1, 0].bar(vehicles, avg_emissions_per_passenger, color=["#00a5cf", "#004e64", "#9fffcb"])
     axs[1, 0].set_title("Avg Emissions per Passenger (g CO₂)")
     axs[1, 0].set_ylabel("g CO₂ / Passenger")
     axs[1, 0].set_xlabel("Vehicle Type")
 
     # Plot 4: Weather distribution
-    axs[1, 1].bar(weather_dist.keys(), weather_dist.values(), color=["gold", "skyblue", "gray", "lightgreen"][:len(weather_dist)])
+    axs[1, 1].bar(weather_dist.keys(), weather_dist.values(), color=["#00a5cf", "#004e64", "#9fffcb", "#8187dc"][:len(weather_dist)])
     axs[1, 1].set_title("Weather Distribution")
     axs[1, 1].set_ylabel("Number of Trips")
     axs[1, 1].set_xlabel("Weather")
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-    # plt.show()
+    plt.show()
 
     # Print delay stats
     print(f"Delayed trips (>6min): {delayed_trips} / {total_trips} ({100*delayed_trips/total_trips:.1f}%), Avg delay: {avg_delay_min:.1f} min")
@@ -122,7 +122,7 @@ def plot_distributions_per_vehicle(results: List[Dict]):
     fig, axs = plt.subplots(1, len(metrics), figsize=(6 * len(metrics), 5))
     if len(metrics) == 1:
         axs = [axs]
-    colors = ["red", "blue", "green", "orange", "purple"]
+    colors = ["#00a5cf", "#004e64", "#9fffcb", "#8187dc"]
     for idx, (metric, title, xlabel) in enumerate(metrics):
         for i, v in enumerate(sorted(vehicle_types)):
             axs[idx].hist(data[metric][v], bins=20, alpha=0.6, label=v, color=colors[i % len(colors)])
@@ -131,6 +131,6 @@ def plot_distributions_per_vehicle(results: List[Dict]):
         axs[idx].set_ylabel("Number of Trips")
         axs[idx].legend()
     plt.tight_layout()
-    # plt.show()
+    plt.show()
     return fig
 
