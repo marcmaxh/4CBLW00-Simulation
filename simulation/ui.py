@@ -70,6 +70,7 @@ class UI:
 
 
     def update_map(self, selected_var, canvas, ax):
+        self.update_values()
         ax.clear()
         self.draw_map(selected_var.get(), ax)
         canvas.draw()
@@ -151,6 +152,7 @@ class UI:
         # Control window still shows Restart and Back
         self.clear_container()
         ttk.Label(self.container, text="Simulation Completed", font=("Arial", 14)).pack(pady=10)
+        ttk.Label(self.container, text="Thank you for using VeloCity", font=("Arial", 14)).pack(pady=10)
         ttk.Label(self.container, textvariable=self.status_var).pack(pady=5)
         ttk.Button(self.container, text="Back", command=self.show_tab3).pack(side="left", padx=10)
         ttk.Button(self.container, text="Restart", command=self.show_tab1).pack(side="right", padx=10)
@@ -178,10 +180,17 @@ class UI:
         self.container.pack(padx=20, pady=20)
         self.status_var = tk.StringVar()
         self.apply_style()
-        self.show_tab1()
+        self.show_tab0()
         self.root.mainloop()
 
-    
+    # Tab 1 - Start Point
+    def show_tab0(self):
+        self.clear_container()
+        ttk.Label(self.container, text="Welcome to VeloCity", font=("Arial", 16)).pack(pady=(5, 10))
+        ttk.Label(self.container, text="To start, please press the button", font=("Arial", 12)).pack(pady=(5, 10))
+        ttk.Button(self.container, text="Start Model", command=self.show_tab1).pack(pady=10)
+
+
     # Tab 1 - Start Point
     def show_tab1(self):
         self.start_var = tk.StringVar()
