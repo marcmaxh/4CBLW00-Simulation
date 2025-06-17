@@ -194,6 +194,9 @@ class UI:
     # Tab 1 - Start Point
     def show_tab1(self):
         self.start_var = tk.StringVar()
+        self.end_var = tk.StringVar()
+        self.time_var = tk.StringVar()
+        self.weather_var = tk.StringVar()
         self.update_values()
         self.clear_container()
 
@@ -224,6 +227,8 @@ class UI:
     # Tab 2 - End point dropdown
     def show_tab2(self):
         self.end_var = tk.StringVar()
+        self.time_var = tk.StringVar()
+        self.weather_var = tk.StringVar()
         self.update_values()
 
         def check_ready_and_proceed():
