@@ -180,13 +180,38 @@ class UI:
         self.container.pack(padx=20, pady=20)
         self.status_var = tk.StringVar()
         self.apply_style()
+        logo_path = os.path.join(self.base_dir, "image", "Logo.png")
+        img = Image.open(logo_path)
+        width, height = img.size
+        left = 0.06 * width
+        right = 0.95 * width
+        top = 0.3 * height
+        bottom = 0.7 * height
+        cropped_img = img.crop((left, top, right, bottom))
+        width, height = cropped_img.size
+        logo_large = cropped_img.resize((int(0.3 * width), int(0.3 * height)))
+        logo_img = cropped_img.resize((int(0.08 * width), int(0.08 * height)))
+        self.logo_photo = ImageTk.PhotoImage(logo_img)
+        self.logo_cover = ImageTk.PhotoImage(logo_large)
         self.show_tab0()
         self.root.mainloop()
 
     # Tab 1 - Start Point
     def show_tab0(self):
         self.clear_container()
-        ttk.Label(self.container, text="Welcome to VeloCity", font=("Arial", 16)).pack(pady=(5, 10))
+        # Create main container frame
+        main_frame = ttk.Frame(self.container)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Top frame for logo (and optionally a title)
+        top_frame = ttk.Frame(main_frame)
+        top_frame.pack(fill=tk.X, padx=10, pady=(10, 0))
+
+        # Add logo
+        logo_label = ttk.Label(top_frame, image=self.logo_cover)
+        logo_label.image = self.logo_cover
+        logo_label.pack()
+        ttk.Label(self.container, text="Welcome to VeloCity", font=("Arial", 20)).pack(pady=(5, 10))
         ttk.Label(self.container, text="To start, please press the button", font=("Arial", 12)).pack(pady=(5, 10))
         ttk.Button(self.container, text="Start Model", command=self.show_tab1).pack(pady=10)
 
@@ -199,7 +224,19 @@ class UI:
         self.weather_var = tk.StringVar()
         self.update_values()
         self.clear_container()
+        
+        # Create main container frame
+        main_frame = ttk.Frame(self.container)
+        main_frame.pack(fill=tk.BOTH, expand=True)
 
+        # Top frame for logo (and optionally a title)
+        top_frame = ttk.Frame(main_frame)
+        top_frame.pack(fill=tk.X, padx=10, pady=(10, 0))
+
+        # Add logo
+        logo_label = ttk.Label(top_frame, image=self.logo_photo)
+        logo_label.image = self.logo_photo
+        logo_label.pack()
         def check_ready_and_proceed():
             if not self.start_var.get():
                 messagebox.showwarning("Missing Info", "Please select a destination.")
@@ -230,7 +267,7 @@ class UI:
         self.time_var = tk.StringVar()
         self.weather_var = tk.StringVar()
         self.update_values()
-
+        
         def check_ready_and_proceed():
             if not self.end_var.get():
                 messagebox.showwarning("Missing Info", "Please select a destination.")
@@ -238,6 +275,20 @@ class UI:
                 self.show_tab3()
 
         self.clear_container()
+
+                # Create main container frame
+        main_frame = ttk.Frame(self.container)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Top frame for logo (and optionally a title)
+        top_frame = ttk.Frame(main_frame)
+        top_frame.pack(fill=tk.X, padx=10, pady=(10, 0))
+
+        # Add logo
+        logo_label = ttk.Label(top_frame, image=self.logo_photo)
+        logo_label.image = self.logo_photo
+        logo_label.pack()
+
         self.dest_img_refs = []
 
         selected_origin = self.start_var.get()
@@ -336,6 +387,19 @@ class UI:
         self.update_values()
         self.clear_container()
 
+        # Create main container frame
+        main_frame = ttk.Frame(self.container)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Top frame for logo (and optionally a title)
+        top_frame = ttk.Frame(main_frame)
+        top_frame.pack(fill=tk.X, padx=10, pady=(10, 0))
+
+        # Add logo
+        logo_label = ttk.Label(top_frame, image=self.logo_photo)
+        logo_label.image = self.logo_photo
+        logo_label.pack()
+
         def check_ready_and_proceed():
             if not self.time_var.get():
                 messagebox.showwarning("Missing Info", "Please select a time.")
@@ -370,6 +434,19 @@ class UI:
     def show_tab4(self):
         self.update_values()
         self.clear_container()
+
+        # Create main container frame
+        main_frame = ttk.Frame(self.container)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Top frame for logo (and optionally a title)
+        top_frame = ttk.Frame(main_frame)
+        top_frame.pack(fill=tk.X, padx=10, pady=(10, 0))
+
+        # Add logo
+        logo_label = ttk.Label(top_frame, image=self.logo_photo)
+        logo_label.image = self.logo_photo
+        logo_label.pack()
 
         # Indicate simulation is running
         loading_label = ttk.Label(self.container, text="Running simulation...", font=("Arial", 12, "italic"))
